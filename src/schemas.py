@@ -25,3 +25,24 @@ class ContactResponse(ContactBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class UserCreate(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    email: EmailStr
+    avatar: str | None
+    confirmed: bool
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str

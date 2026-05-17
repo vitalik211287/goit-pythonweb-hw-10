@@ -1,10 +1,15 @@
+from src.database.models import User
+from src.services.auth import get_current_user
+
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_db
+from src.database.models import User
 from src.schemas import ContactCreate, ContactUpdate, ContactResponse
+from src.services.auth import get_current_user
 from src.services.contacts import ContactService
 
 
@@ -19,21 +24,36 @@ async def read_contacts(
     last_name: str | None = None,
     email: str | None = None,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     service = ContactService(db)
-    return await service.get_contacts(skip, limit, first_name, last_name, email)
+    return await service.get_contacts(
+        skip,
+        limit,
+        first_name,
+        last_name,
+        email,
+        current_user,
+    )
 
 
 @router.get("/birthdays", response_model=List[ContactResponse])
-async def upcoming_birthdays(db: AsyncSession = Depends(get_db)):
+async def upcoming_birthdays(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     service = ContactService(db)
-    return await service.get_upcoming_birthdays()
+    return await service.get_upcoming_birthdays(current_user)
 
 
 @router.get("/{contact_id}", response_model=ContactResponse)
-async def read_contact(contact_id: int, db: AsyncSession = Depends(get_db)):
+async def read_contact(
+    contact_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     service = ContactService(db)
-    contact = await service.get_contact(contact_id)
+    contact = await service.get_contact(contact_id, current_user)
 
     if contact is None:
         raise HTTPException(
@@ -48,9 +68,10 @@ async def read_contact(contact_id: int, db: AsyncSession = Depends(get_db)):
 async def create_contact(
     body: ContactCreate,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     service = ContactService(db)
-    return await service.create_contact(body)
+    return await service.create_contact(body, current_user)
 
 
 @router.put("/{contact_id}", response_model=ContactResponse)
@@ -58,9 +79,10 @@ async def update_contact(
     contact_id: int,
     body: ContactUpdate,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     service = ContactService(db)
-    contact = await service.update_contact(contact_id, body)
+    contact = await service.update_contact(contact_id, body, current_user)
 
     if contact is None:
         raise HTTPException(
@@ -75,9 +97,10 @@ async def update_contact(
 async def delete_contact(
     contact_id: int,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     service = ContactService(db)
-    contact = await service.delete_contact(contact_id)
+    contact = await service.delete_contact(contact_id, current_user)
 
     if contact is None:
         raise HTTPException(
