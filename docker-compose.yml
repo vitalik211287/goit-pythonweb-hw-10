@@ -1,0 +1,18 @@
+services:
+  db:
+    image: postgres:16
+    container_name: contacts-postgres
+    restart: always
+    ports:
+      - "5433:5432"
+
+    environment:
+      POSTGRES_DB: contacts_app
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 567234
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
